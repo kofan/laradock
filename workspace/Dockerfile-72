@@ -313,7 +313,7 @@ RUN if [ ${INSTALL_NODE} = true ]; then \
         if [ ${NPM_REGISTRY} ]; then \
         npm config set registry ${NPM_REGISTRY} \
         ;fi && \
-        npm install -g gulp bower vue-cli \
+        npm install -g vue-cli \
 ;fi
 
 # Wouldn't execute when added to the RUN statement in the above block
@@ -691,6 +691,10 @@ RUN if [ ${INSTALL_DUSK_DEPS} = true ]; then \
   && mv chromedriver /usr/local/bin/ \
   && rm chromedriver_linux64.zip \
 ;fi
+
+# Install ping utility
+RUN apt-get update -yqq && \
+    apt-get -y install iputils-ping
 
 #####################################
 # Check PHP version:

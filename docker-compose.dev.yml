@@ -6,4 +6,4 @@ services:
 
     applications:
       volumes:
-        - ${APPLICATION}:/var/www
+        - ${LARAVEL_DIR}:/var/www/laravel

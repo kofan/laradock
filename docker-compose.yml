@@ -138,6 +138,7 @@ services:
         args:
           - PHP_UPSTREAM_CONTAINER=${NGINX_PHP_UPSTREAM_CONTAINER}
           - PHP_UPSTREAM_PORT=${NGINX_PHP_UPSTREAM_PORT}
+          - SSL_SITE_NAME=${NGINX_SSL_SITE_NAME}
       volumes_from:
         - applications
       volumes:
@@ -294,7 +295,7 @@ services:
     postgres:
       build: ./postgres
       volumes:
-        - ${DATA_SAVE_PATH}/postgres:/var/lib/postgresql
+        - ${DATA_SAVE_PATH}/postgres:/var/lib/postgresql/data
       ports:
         - "${POSTGRES_PORT}:5432"
       environment:
