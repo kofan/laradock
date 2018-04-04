@@ -6,4 +6,4 @@ services:
 
     applications:
       volumes:
-        - ${LARAVEL_HOST_DIR}:${LARAVEL_MOUNT_DIR}
+        - ${LARAVEL_HOST_DIR}:${LARAVEL_MOUNT_DIR}:cached

@@ -65,6 +65,8 @@ services:
       ports:
         - "${WORKSPACE_SSH_PORT}:22"
       tty: true
+      environment:
+        - PHP_IDE_CONFIG=${PHP_IDE_CONFIG}
       networks:
         - frontend
         - backend
@@ -126,6 +128,8 @@ services:
           - INSTALL_PGSQL=${PHP_WORKER_INSTALL_PGSQL}
       volumes_from:
         - applications
+      volumes:
+        - ./php-worker/supervisord.d:/etc/supervisord.d
       depends_on:
         - workspace
       extra_hosts:
@@ -512,7 +516,6 @@ services:
       build: ./elasticsearch
       volumes:
         - elasticsearch-data:/usr/share/elasticsearch/data
-        - elasticsearch-plugins:/usr/share/elasticsearch/plugins
       environment:
         - cluster.name=laradock-cluster
         - bootstrap.memory_lock=true
@@ -751,6 +754,4 @@ volumes:
   caddy:
     driver: "local"
   elasticsearch-data:
-    driver: "local"
-  elasticsearch-plugins:
     driver: "local"
