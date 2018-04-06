@@ -267,9 +267,9 @@ RUN if [ ${INSTALL_AMQP} = true ]; then \
     ln -s /etc/php/${PHP_VERSION}/mods-available/amqp.ini /etc/php/${PHP_VERSION}/cli/conf.d/30-amqp.ini \
 ;fi
 
-#####################################
-# PHP AST EXTENSION FOR PHP 7.2
-#####################################
+###########################################################################
+# PHP AST EXTENSION
+###########################################################################
 
 ARG INSTALL_AST=false
 ARG PHP_VERSION=${PHP_VERSION}
