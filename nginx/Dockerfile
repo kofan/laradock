@@ -18,7 +18,7 @@ RUN apk update \
     && apk add --no-cache openssl \
     && adduser -D -H -u 1000 -s /bin/bash www-data
 
-ARG SSL_SITE_NAME=laradock.test
+ARG SSL_SITE_NAME=laradock.localhost
 ARG PHP_UPSTREAM_CONTAINER=php-fpm
 ARG PHP_UPSTREAM_PORT=9000
 
