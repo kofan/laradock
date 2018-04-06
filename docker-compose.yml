@@ -93,11 +93,11 @@ services:
           - BLACKFIRE_CLIENT_TOKEN=${BLACKFIRE_CLIENT_TOKEN}
           - DRUSH_VERSION=${DRUSH_VERSION}
       volumes:
-        - ${APP_CODE_PATH_HOST}:${APP_CODE_PATH_CONTAINER}:cached
+        - ${APP_CODE_PATH_HOST}:${APP_CODE_PATH_CONTAINER}${APP_CODE_VOLUME_FLAG}
       extra_hosts:
         - "dockerhost:${DOCKER_HOST_IP}"
       ports:
-        - "${WORKSPACE_SSH_PORT}:22"
+        - ${WORKSPACE_SSH_PORT}:22
       tty: true
       environment:
         - PHP_IDE_CONFIG=${PHP_IDE_CONFIG}
@@ -137,12 +137,12 @@ services:
           - INSTALL_IMAGE_OPTIMIZERS=${PHP_FPM_INSTALL_IMAGE_OPTIMIZERS}
           - INSTALL_IMAGEMAGICK=${PHP_FPM_INSTALL_IMAGEMAGICK}
       volumes:
+        - ${APP_CODE_PATH_HOST}:${APP_CODE_PATH_CONTAINER}${APP_CODE_VOLUME_FLAG}
         - ./php-fpm/php${PHP_VERSION}.ini:/usr/local/etc/php/php.ini
-        - ${APP_CODE_PATH_HOST}:${APP_CODE_PATH_CONTAINER}:cached
       expose:
-        - "9000"
+        - 9000
       extra_hosts:
-        - "dockerhost:${DOCKER_HOST_IP}"
+        - dockerhost:${DOCKER_HOST_IP}
       environment:
         - PHP_IDE_CONFIG=${PHP_IDE_CONFIG}
       networks:
@@ -156,12 +156,12 @@ services:
           - PHP_VERSION=${PHP_VERSION}
           - INSTALL_PGSQL=${PHP_WORKER_INSTALL_PGSQL}
       volumes:
-        - ${APP_CODE_PATH_HOST}:${APP_CODE_PATH_CONTAINER}:cached
+        - ${APP_CODE_PATH_HOST}:${APP_CODE_PATH_CONTAINER}${APP_CODE_VOLUME_FLAG}
         - ./php-worker/supervisord.d:/etc/supervisord.d
       depends_on:
         - workspace
       extra_hosts:
-        - "dockerhost:${DOCKER_HOST_IP}"
+        - dockerhost:${DOCKER_HOST_IP}
       networks:
         - backend
 
@@ -174,12 +174,12 @@ services:
           - PHP_UPSTREAM_PORT=${NGINX_PHP_UPSTREAM_PORT}
           - SSL_SITE_NAME=${NGINX_SSL_SITE_NAME}
       volumes:
-        - ${APP_CODE_PATH_HOST}:${APP_CODE_PATH_CONTAINER}:cached
+        - ${APP_CODE_PATH_HOST}:${APP_CODE_PATH_CONTAINER}${APP_CODE_VOLUME_FLAG}
         - ${LOGS_PATH_HOST}/nginx:/var/log/nginx
         - ${NGINX_SITES_PATH}:/etc/nginx/sites-available
       ports:
-        - "${NGINX_HOST_HTTP_PORT}:80"
-        - "${NGINX_HOST_HTTPS_PORT}:443"
+        - ${NGINX_HOST_HTTP_PORT}:80
+        - ${NGINX_HOST_HTTPS_PORT}:443
       depends_on:
         - php-fpm
       networks:
@@ -207,12 +207,12 @@ services:
           - PHP_UPSTREAM_TIMEOUT=${APACHE_PHP_UPSTREAM_TIMEOUT}
           - DOCUMENT_ROOT=${APACHE_DOCUMENT_ROOT}
       volumes:
-        - ${APP_CODE_PATH_HOST}:${APP_CODE_PATH_CONTAINER}:cached
+        - ${APP_CODE_PATH_HOST}:${APP_CODE_PATH_CONTAINER}${APP_CODE_VOLUME_FLAG}
         - ${LOGS_PATH_HOST}/apache2:/var/log/apache2
         - ${APACHE_SITES_PATH}:/etc/apache2/sites-available
       ports:
-        - "${APACHE_HOST_HTTP_PORT}:80"
-        - "${APACHE_HOST_HTTPS_PORT}:443"
+        - ${APACHE_HOST_HTTP_PORT}:80
+        - ${APACHE_HOST_HTTPS_PORT}:443
       depends_on:
         - php-fpm
       networks:
@@ -223,9 +223,9 @@ services:
     hhvm:
       build: ./hhvm
       volumes:
-        - ${APP_CODE_PATH_HOST}:${APP_CODE_PATH_CONTAINER}:cached
+        - ${APP_CODE_PATH_HOST}:${APP_CODE_PATH_CONTAINER}${APP_CODE_VOLUME_FLAG}
       expose:
-        - "9000"
+        - 9000
       depends_on:
         - workspace
       networks:
@@ -239,7 +239,7 @@ services:
         - ${DATA_PATH_HOST}/minio/data:/export
         - ${DATA_PATH_HOST}/minio/config:/root/.minio
       ports:
-        - "${MINIO_PORT}:9000"
+        - ${MINIO_PORT}:9000
       environment:
         - MINIO_ACCESS_KEY=access
         - MINIO_SECRET_KEY=secretkey
@@ -263,7 +263,7 @@ services:
         - ${DATA_PATH_HOST}/mysql:/var/lib/mysql
         - ${MYSQL_ENTRYPOINT_INITDB}:/docker-entrypoint-initdb.d
       ports:
-        - "${MYSQL_PORT}:3306"
+        - ${MYSQL_PORT}:3306
       networks:
         - backend
 
@@ -280,7 +280,7 @@ services:
         - ${DATA_PATH_HOST}/percona:/var/lib/mysql
         - ${PERCONA_ENTRYPOINT_INITDB}:/docker-entrypoint-initdb.d
       ports:
-        - "${PERCONA_PORT}:3306"
+        - ${PERCONA_PORT}:3306
       networks:
         - backend
 
@@ -295,7 +295,7 @@ services:
       volumes:
         - ${DATA_PATH_HOST}/mssql:/var/opt/mssql
       ports:
-        - "${MSSQL_PORT}:1433"
+        - ${MSSQL_PORT}:1433
       networks:
         - backend
 
@@ -306,7 +306,7 @@ services:
         - ${DATA_PATH_HOST}/mariadb:/var/lib/mysql
         - ${MARIADB_ENTRYPOINT_INITDB}:/docker-entrypoint-initdb.d
       ports:
-        - "${MARIADB_PORT}:3306"
+        - ${MARIADB_PORT}:3306
       environment:
         - MYSQL_DATABASE=${MARIADB_DATABASE}
         - MYSQL_USER=${MARIADB_USER}
@@ -321,7 +321,7 @@ services:
       volumes:
         - ${DATA_PATH_HOST}/postgres:/var/lib/postgresql/data
       ports:
-        - "${POSTGRES_PORT}:5432"
+        - ${POSTGRES_PORT}:5432
       environment:
         - POSTGRES_DB=${POSTGRES_DB}
         - POSTGRES_USER=${POSTGRES_USER}
@@ -335,7 +335,7 @@ services:
       volumes:
         - ${DATA_PATH_HOST}/postgres:/var/lib/postgresql/data
       ports:
-        - "${POSTGRES_PORT}:5432"
+        - ${POSTGRES_PORT}:5432
       environment:
         - POSTGRES_DB=${POSTGRES_DB}
         - POSTGRES_USER=${POSTGRES_USER}
@@ -347,8 +347,8 @@ services:
     neo4j:
       build: ./neo4j
       ports:
-        - "7474:7474"
-        - "1337:1337"
+        - 7474:7474
+        - 1337:1337
       environment:
         - NEO4J_AUTH=default:secret
       volumes:
@@ -360,7 +360,7 @@ services:
     mongo:
       build: ./mongo
       ports:
-        - "${MONGODB_PORT}:27017"
+        - ${MONGODB_PORT}:27017
       volumes:
         - ${DATA_PATH_HOST}/mongo:/data/db
       networks:
@@ -370,7 +370,7 @@ services:
     rethinkdb:
       build: ./rethinkdb
       ports:
-        - "${RETHINKDB_PORT}:8080"
+        - ${RETHINKDB_PORT}:8080
       volumes:
         - ${DATA_PATH_HOST}/rethinkdb:/data/rethinkdb_data
       networks:
@@ -382,7 +382,7 @@ services:
       volumes:
         - ${DATA_PATH_HOST}/redis:/data
       ports:
-        - "${REDIS_PORT}:6379"
+        - ${REDIS_PORT}:6379
       networks:
         - backend
 
@@ -393,10 +393,10 @@ services:
         - workspace
         - ${DATA_PATH_HOST}/aerospike:/opt/aerospike/data
       ports:
-        - "${AEROSPIKE_SERVICE_PORT}:3000"
-        - "${AEROSPIKE_FABRIC_PORT}:3001"
-        - "${AEROSPIKE_HEARTBEAT_PORT}:3002"
-        - "${AEROSPIKE_INFO_PORT}:3003"
+        - ${AEROSPIKE_SERVICE_PORT}:3000
+        - ${AEROSPIKE_FABRIC_PORT}:3001
+        - ${AEROSPIKE_HEARTBEAT_PORT}:3002
+        - ${AEROSPIKE_INFO_PORT}:3003
       networks:
         - backend
 
@@ -406,7 +406,7 @@ services:
       volumes:
         - ${DATA_PATH_HOST}/memcached:/var/lib/memcached
       ports:
-        - "${MEMCACHED_HOST_PORT}:11211"
+        - ${MEMCACHED_HOST_PORT}:11211
       depends_on:
         - php-fpm
       networks:
@@ -416,7 +416,7 @@ services:
     beanstalkd:
       build: ./beanstalkd
       ports:
-        - "${BEANSTALKD_HOST_PORT}:11300"
+        - ${BEANSTALKD_HOST_PORT}:11300
       privileged: true
       depends_on:
         - php-fpm
@@ -427,9 +427,9 @@ services:
     rabbitmq:
       build: ./rabbitmq
       ports:
-        - "${RABBITMQ_NODE_HOST_PORT}:5672"
-        - "${RABBITMQ_MANAGEMENT_HTTP_HOST_PORT}:15672"
-        - "${RABBITMQ_MANAGEMENT_HTTPS_HOST_PORT}:15671"
+        - ${RABBITMQ_NODE_HOST_PORT}:5672
+        - ${RABBITMQ_MANAGEMENT_HTTP_HOST_PORT}:15672
+        - ${RABBITMQ_MANAGEMENT_HTTPS_HOST_PORT}:15671
       privileged: true
       environment:
         - RABBITMQ_DEFAULT_USER=${RABBITMQ_DEFAULT_USER}
@@ -443,7 +443,7 @@ services:
     beanstalkd-console:
       build: ./beanstalkd-console
       ports:
-        - "${BEANSTALKD_CONSOLE_HOST_PORT}:2080"
+        - ${BEANSTALKD_CONSOLE_HOST_PORT}:2080
       depends_on:
         - beanstalkd
       networks:
@@ -453,13 +453,13 @@ services:
     caddy:
       build: ./caddy
       volumes:
-        - ${APP_CODE_PATH_HOST}:${APP_CODE_PATH_CONTAINER}:cached
+        - ${APP_CODE_PATH_HOST}:${APP_CODE_PATH_CONTAINER}${APP_CODE_VOLUME_FLAG}
         - ${CADDY_CUSTOM_CADDYFILE}:/etc/Caddyfile
         - ${LOGS_PATH_HOST}/caddy:/var/log/caddy
         - ${DATA_PATH_HOST}:/root/.caddy
       ports:
-        - "${CADDY_HOST_HTTP_PORT}:80"
-        - "${CADDY_HOST_HTTPS_PORT}:443"
+        - ${CADDY_HOST_HTTP_PORT}:80
+        - ${CADDY_HOST_HTTPS_PORT}:443
       depends_on:
         - php-fpm
       networks:
@@ -475,9 +475,9 @@ services:
         - MYSQL_PASSWORD=${PMA_PASSWORD}
         - MYSQL_ROOT_PASSWORD=${PMA_ROOT_PASSWORD}
       ports:
-        - "${PMA_PORT}:80"
+        - ${PMA_PORT}:80
       depends_on:
-        - "${PMA_DB_ENGINE}"
+        - ${PMA_DB_ENGINE}
       networks:
         - frontend
         - backend
@@ -489,7 +489,7 @@ services:
         args:
           - INSTALL_MSSQL=${ADM_INSTALL_MSSQL}
       ports:
-        - "${ADM_PORT}:8080"
+        - ${ADM_PORT}:8080
       depends_on:
         - php-fpm
       networks:
@@ -500,7 +500,7 @@ services:
     pgadmin:
       build: ./pgadmin
       ports:
-        - "5050:5050"
+        - 5050:5050
       volumes:
         - ${DATA_PATH_HOST}/pgadmin-backup:/var/lib/pgadmin/storage/pgadmin4
       depends_on:
@@ -518,14 +518,14 @@ services:
       environment:
         - cluster.name=laradock-cluster
         - bootstrap.memory_lock=true
-        - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+        - ES_JAVA_OPTS=-Xms512m -Xmx512m
       ulimits:
         memlock:
           soft: -1
           hard: -1
       ports:
-        - "${ELASTICSEARCH_HOST_HTTP_PORT}:9200"
-        - "${ELASTICSEARCH_HOST_TRANSPORT_PORT}:9300"
+        - ${ELASTICSEARCH_HOST_HTTP_PORT}:9200
+        - ${ELASTICSEARCH_HOST_TRANSPORT_PORT}:9300
       depends_on:
         - php-fpm
       networks:
@@ -537,7 +537,7 @@ services:
     kibana:
       build: ./kibana
       ports:
-        - "${KIBANA_HTTP_PORT}:5601"
+        - ${KIBANA_HTTP_PORT}:5601
       depends_on:
         - elasticsearch
       networks:
@@ -552,8 +552,8 @@ services:
         - ${DATA_PATH_HOST}/certbot/certs/:/var/certs
         - ./certbot/letsencrypt/:${APP_CODE_PATH_CONTAINER}/letsencrypt
       environment:
-        - CN="fake.domain.com"
-        - EMAIL="fake.email@gmail.com"
+        - CN=fake.domain.com
+        - EMAIL=fake.email@gmail.com
       networks:
         - frontend
 
@@ -561,8 +561,8 @@ services:
     mailhog:
       build: ./mailhog
       ports:
-        - "1025:1025"
-        - "8025:8025"
+        - 1025:1025
+        - 8025:8025
       networks:
         - frontend
         - backend
@@ -571,8 +571,8 @@ services:
     maildev:
       build: ./maildev
       ports:
-        - "${MAILDEV_HTTP_PORT}:80"
-        - "${MAILDEV_SMTP_PORT}:25"
+        - ${MAILDEV_HTTP_PORT}:80
+        - ${MAILDEV_SMTP_PORT}:25
       networks:
         - frontend
         - backend
@@ -581,7 +581,7 @@ services:
     selenium:
       build: ./selenium
       ports:
-        - "${SELENIUM_PORT}:4444"
+        - ${SELENIUM_PORT}:4444
       volumes:
         - /dev/shm:/dev/shm
       networks:
@@ -626,7 +626,7 @@ services:
     haproxy:
       build: ./haproxy
       ports:
-        - "${HAPROXY_HOST_HTTP_PORT}:8085"
+        - ${HAPROXY_HOST_HTTP_PORT}:8085
       volumes:
         - /var/run/docker.sock:/var/run/docker.sock
       links:
@@ -637,10 +637,10 @@ services:
     jenkins:
       build: ./jenkins
       environment:
-        JAVA_OPTS: "-Djava.awt.headless=true"
+        JAVA_OPTS: -Djava.awt.headless=true
       ports:
-        - "${JENKINS_HOST_SLAVE_AGENT_PORT}:50000"
-        - "${JENKINS_HOST_HTTP_PORT}:8080"
+        - ${JENKINS_HOST_SLAVE_AGENT_PORT}:50000
+        - ${JENKINS_HOST_HTTP_PORT}:8080
       privileged: true
       volumes:
         - ${JENKINS_HOME}:/var/jenkins_home
@@ -656,7 +656,7 @@ services:
       volumes:
         - ${DATA_PATH_HOST}/grafana:/var/lib/grafana
       ports:
-        - "${GRAFANA_PORT}:3000"
+        - ${GRAFANA_PORT}:3000
       networks:
         - backend
 
@@ -667,13 +667,13 @@ services:
       volumes:
         - ./laravel-echo-server/laravel-echo-server.json:/app/laravel-echo-server.json:ro
       ports:
-        - "${LARAVEL_ECHO_SERVER_PORT}:6001"
+        - ${LARAVEL_ECHO_SERVER_PORT}:6001
       links:
         - redis
       networks:
         - frontend
         - backend
-        
+
 ### Solr ################################################
     solr:
       build:
@@ -684,7 +684,7 @@ services:
       volumes:
         - ${DATA_PATH_HOST}/solr:/opt/solr/server/solr/mycores
       ports:
-        - "${SOLR_PORT}:8983"
+        - ${SOLR_PORT}:8983
       networks:
         - backend
 
@@ -693,7 +693,7 @@ services:
       build:
         context: ./aws
       volumes:
-        - ${APP_CODE_PATH_HOST}:${APP_CODE_PATH_CONTAINER}:cached
+        - ${APP_CODE_PATH_HOST}:${APP_CODE_PATH_CONTAINER}${APP_CODE_VOLUME_FLAG}
       depends_on:
         - workspace
       tty: true
