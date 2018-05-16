@@ -82,14 +82,18 @@ RUN sed -i 's/\r//' /root/aliases.sh && \
     echo "" >> ~/.bashrc && \
     echo "# Load Custom Aliases" >> ~/.bashrc && \
     echo "source ~/aliases.sh" >> ~/.bashrc && \
-	echo "" >> ~/.bashrc
+	  echo "# Set shell size" >> ~/.bashrc && \
+	  echo "stty rows 50 cols 132" >> ~/.bashrc && \
+	  echo "" >> ~/.bashrc
 
 USER laradock
 
 RUN echo "" >> ~/.bashrc && \
     echo "# Load Custom Aliases" >> ~/.bashrc && \
     echo "source ~/aliases.sh" >> ~/.bashrc && \
-	echo "" >> ~/.bashrc
+	  echo "# Set shell size" >> ~/.bashrc && \
+  	echo "stty rows 50 cols 132" >> ~/.bashrc && \
+  	echo "" >> ~/.bashrc
 
 ###########################################################################
 # Composer:
@@ -150,6 +154,9 @@ RUN chmod -R 644 /etc/cron.d
 ###########################################################################
 
 USER root
+
+# Install vim and wget (they are always needed)
+RUN apt-get update -yqq && apt-get install -y vim wget
 
 ARG INSTALL_SOAP=false
 ARG PHP_VERSION=${PHP_VERSION}
@@ -310,43 +317,12 @@ RUN if [ ${INSTALL_SWOOLE} = true ]; then \
 ;fi
 
 ###########################################################################
-# Drush:
-###########################################################################
-
-USER root
-
-ARG INSTALL_DRUSH=false
-
-RUN if [ ${INSTALL_DRUSH} = true ]; then \
-    apt-get -y install mysql-client && \
-    # Install Drush 8 with the phar file.
-    curl -fsSL -o /usr/local/bin/drush https://github.com/drush-ops/drush/releases/download/${DRUSH_VERSION}/drush.phar | bash && \
-    chmod +x /usr/local/bin/drush && \
-    drush core-status \
-;fi
-
-###########################################################################
-# Drupal Console:
-###########################################################################
-
-USER root
-
-ARG INSTALL_DRUPAL_CONSOLE=false
-
-RUN if [ ${INSTALL_DRUPAL_CONSOLE} = true ]; then \
-    apt-get -y install mysql-client && \
-    curl https://drupalconsole.com/installer -L -o drupal.phar && \
-    mv drupal.phar /usr/local/bin/drupal && \
-    chmod +x /usr/local/bin/drupal \
-;fi
-
-USER laradock
-
-###########################################################################
 # Node / NVM:
 ###########################################################################
 
 # Check if NVM needs to be installed
+USER laradock
+
 ARG NODE_VERSION=stable
 ENV NODE_VERSION ${NODE_VERSION}
 ARG INSTALL_NODE=false
@@ -430,8 +406,6 @@ ARG INSTALL_AEROSPIKE=false
 ARG PHP_VERSION=${PHP_VERSION}
 
 RUN if [ ${INSTALL_AEROSPIKE} = true ]; then \
-    # Fix dependencies for PHPUnit within aerospike extension
-    apt-get -y install sudo wget && \
     # Install the php aerospike extension
     curl -L -o /tmp/aerospike-client-php.tar.gz ${AEROSPIKE_PHP_REPOSITORY} \
     && mkdir -p aerospike-client-php \
@@ -679,12 +653,13 @@ USER root
 ARG INSTALL_TERRAFORM=false
 
 RUN if [ ${INSTALL_TERRAFORM} = true ]; then \
-    apt-get -y install sudo wget unzip \
+    apt-get -y install sudo unzip \
     && wget https://releases.hashicorp.com/terraform/0.10.6/terraform_0.10.6_linux_amd64.zip \
     && unzip terraform_0.10.6_linux_amd64.zip \
     && mv terraform /usr/local/bin \
     && rm terraform_0.10.6_linux_amd64.zip \
 ;fi
+
 ###########################################################################
 # pgsql client
 ###########################################################################
@@ -699,6 +674,21 @@ RUN if [ ${INSTALL_PG_CLIENT} = true ]; then \
 ;fi
 
 ###########################################################################
+# mysql client
+###########################################################################
+
+ARG INSTALL_MYSQL_CLIENT=false
+
+RUN if [ ${INSTALL_MYSQL_CLIENT} = true ]; then \
+    # Install the mysql client
+    wget https://dev.mysql.com/get/mysql-apt-config_0.8.10-1_all.deb && \
+    DEBIAN_FRONTEND=noninteractive dpkg -i mysql-apt-config_0.8.10-1_all.deb && \
+    apt-get -yqq update && \
+    apt-get -y install mysql-client && \
+    rm -rf mysql-apt-config_0.8.10-1_all.deb \
+;fi
+
+###########################################################################
 # Dusk Dependencies:
 ###########################################################################
 
@@ -709,7 +699,7 @@ ENV CHROME_DRIVER_VERSION ${CHROME_DRIVER_VERSION}
 ARG INSTALL_DUSK_DEPS=false
 
 RUN if [ ${INSTALL_DUSK_DEPS} = true ]; then \
-  apt-get -y install zip wget unzip xdg-utils \
+  apt-get -y install zip unzip xdg-utils \
     libxpm4 libxrender1 libgtk2.0-0 libnss3 libgconf-2-4 xvfb \
     gtk2-engines-pixbuf xfonts-cyrillic xfonts-100dpi xfonts-75dpi \
     xfonts-base xfonts-scalable x11-apps \
