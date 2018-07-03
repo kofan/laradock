@@ -18,6 +18,9 @@ FROM laradock/workspace:2.2-${PHP_VERSION}
 
 LABEL maintainer="Mahmoud Zalt <mahmoud@zalt.me>"
 
+# Set Environment Variables
+ENV DEBIAN_FRONTEND noninteractive
+
 # Start as root
 USER root
 
@@ -216,13 +219,27 @@ ARG PHP_VERSION=${PHP_VERSION}
 
 RUN if [ ${INSTALL_XDEBUG} = true ]; then \
     # Load the xdebug extension only with phpunit commands
-    apt-get install -y --force-yes php${PHP_VERSION}-xdebug && \
+    apt-get install -y php${PHP_VERSION}-xdebug && \
     sed -i 's/^;//g' /etc/php/${PHP_VERSION}/cli/conf.d/20-xdebug.ini && \
     echo "alias phpunit='php -dzend_extension=xdebug.so /var/www/vendor/bin/phpunit'" >> ~/.bashrc \
 ;fi
 
 # ADD for REMOTE debugging
 COPY ./xdebug.ini /etc/php/${PHP_VERSION}/cli/conf.d/xdebug.ini
+
+###########################################################################
+# Phpdbg:
+###########################################################################
+
+USER root
+
+ARG INSTALL_PHPDBG=false
+ARG PHP_VERSION=${PHP_VERSION}
+
+RUN if [ ${INSTALL_PHPDBG} = true ]; then \
+    # Load the xdebug extension only with phpunit commands
+    apt-get install -y --force-yes php${PHP_VERSION}-phpdbg \
+;fi
 
 ###########################################################################
 # Blackfire:
@@ -343,7 +360,7 @@ RUN if [ ${INSTALL_SWOOLE} = true ]; then \
 # Check if NVM needs to be installed
 USER laradock
 
-ARG NODE_VERSION=stable
+ARG NODE_VERSION=node
 ENV NODE_VERSION ${NODE_VERSION}
 ARG INSTALL_NODE=false
 ARG NPM_REGISTRY
@@ -352,12 +369,12 @@ ENV NVM_DIR /home/laradock/.nvm
 
 RUN if [ ${INSTALL_NODE} = true ]; then \
     # Install nvm (A Node Version Manager)
-    curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.33.8/install.sh | bash && \
-        . $NVM_DIR/nvm.sh && \
-        nvm install ${NODE_VERSION} && \
-        nvm use ${NODE_VERSION} && \
-        nvm alias ${NODE_VERSION} && \
-        if [ ${NPM_REGISTRY} ]; then \
+    curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.33.8/install.sh | bash \
+        && . $NVM_DIR/nvm.sh \
+        && nvm install ${NODE_VERSION} \
+        && nvm use ${NODE_VERSION} \
+        && nvm alias ${NODE_VERSION} \
+        && if [ ${NPM_REGISTRY} ]; then \
         npm config set registry ${NPM_REGISTRY} \
         ;fi \
 ;fi
@@ -552,44 +569,6 @@ RUN if [ ${INSTALL_LINUXBREW} = true ]; then \
 ;fi
 
 ###########################################################################
-# SQL SERVER:
-###########################################################################
-
-ARG INSTALL_MSSQL=false
-ARG PHP_VERSION=${PHP_VERSION}
-
-RUN set -eux; if [ ${INSTALL_MSSQL} = true ]; then \
-    ###########################################################################
-    #  The following steps were taken from
-    #  https://github.com/Microsoft/msphpsql/wiki/Install-and-configuration
-    ###########################################################################
-    curl https://packages.microsoft.com/keys/microsoft.asc | apt-key add - && \
-    curl https://packages.microsoft.com/config/ubuntu/16.04/prod.list > /etc/apt/sources.list.d/mssql-release.list && \
-    apt-get update -yqq && \
-    ACCEPT_EULA=Y apt-get install -yqq msodbcsql=13.0.1.0-1 mssql-tools=14.0.2.0-1 && \
-    apt-get install -yqq unixodbc-dev-utf16 && \
-    ln -sfn /opt/mssql-tools/bin/sqlcmd-13.0.1.0 /usr/bin/sqlcmd && \
-    ln -sfn /opt/mssql-tools/bin/bcp-13.0.1.0 /usr/bin/bcp && \
-    ACCEPT_EULA=Y apt-get install -yqq \
-        unixodbc \
-        unixodbc-dev \
-        libgss3 \
-        odbcinst \
-        msodbcsql \
-        locales && \
-    echo "en_US.UTF-8 UTF-8" > /etc/locale.gen && \
-    locale-gen && \
-    pecl install sqlsrv-4.3.0 pdo_sqlsrv-4.3.0 && \
-    apt-get install -y locales && \
-    echo "en_US.UTF-8 UTF-8" > /etc/locale.gen && \
-    locale-gen && \
-    echo "extension=sqlsrv.so"     > /etc/php/${PHP_VERSION}/cli/conf.d/20-sqlsrv.ini && \
-    echo "extension=pdo_sqlsrv.so" > /etc/php/${PHP_VERSION}/cli/conf.d/20-pdo_sqlsrv.ini \
-    && php -m | grep -q 'sqlsrv' \
-    && php -m | grep -q 'pdo_sqlsrv' \
-;fi
-
-###########################################################################
 # Minio:
 ###########################################################################
 
@@ -613,9 +592,9 @@ USER root
 ARG INSTALL_IMAGE_OPTIMIZERS=false
 
 RUN if [ ${INSTALL_IMAGE_OPTIMIZERS} = true ]; then \
-    apt-get install -y --force-yes jpegoptim optipng pngquant gifsicle && \
+    apt-get install -y jpegoptim optipng pngquant gifsicle && \
     if [ ${INSTALL_NODE} = true ]; then \
-        . ~/.bashrc && npm install -g svgo \
+        exec bash && . ~/.bashrc && npm install -g svgo \
     ;fi\
 ;fi
 
@@ -663,7 +642,7 @@ ARG INSTALL_IMAGEMAGICK=false
 
 RUN if [ ${INSTALL_IMAGEMAGICK} = true ]; then \
     apt-get update && \
-    apt-get install -y --force-yes imagemagick php-imagick \
+    apt-get install -y imagemagick php-imagick \
 ;fi
 
 ###########################################################################
