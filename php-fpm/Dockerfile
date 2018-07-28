@@ -462,6 +462,10 @@ RUN php -v | head -n 1 | grep -q "PHP ${PHP_VERSION}."
 #--------------------------------------------------------------------------
 #
 
+# Remove default www data
+RUN rm -rf /var/www/html /usr/local/etc/php-fpm.d/*
+
+# Copy configs
 COPY ./laravel.ini /usr/local/etc/php/conf.d
 COPY ./xlaravel.pool.conf /usr/local/etc/php-fpm.d/
 

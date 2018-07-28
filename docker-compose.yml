@@ -155,8 +155,8 @@ services:
         - workspace
       networks:
         - backend
-      links:
-        - docker-in-docker
+      # links:
+      #  - docker-in-docker
 
 ### PHP Worker ############################################
     php-worker:
